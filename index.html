@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Chi Tiêu Du Lịch - Lưu Trữ & Chia Sẻ</title>
+    <title>Sổ Tay Chi Tiêu Du Lịch Nhóm</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body class="bg-slate-50 font-sans min-h-screen">
 
-    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-6 shadow-lg text-center relative">
-        <h1 class="text-3xl font-bold tracking-wide"><i class="fa-solid fa-plane-departure mr-2"></i>Sổ Tay Chi Tiêu Du Lịch</h1>
-        <p class="text-indigo-100 mt-1 text-sm">Tự động lưu trữ dữ liệu và hỗ trợ chia sẻ link nhóm</p>
+    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-6 shadow-lg text-center">
+        <h1 class="text-3xl font-bold tracking-wide"><i class="fa-solid fa-plane-departure mr-2"></i>Sổ Tay Chi Tiêu Du Lịch Nhóm</h1>
+        <p class="text-indigo-100 mt-1 text-sm">Dữ liệu tự động đồng bộ thời gian thực cho cả nhóm</p>
     </header>
 
     <main class="max-w-5xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -22,11 +25,11 @@
                 <div class="space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-500 mb-1">Tổng ngân sách (VND)</label>
-                        <input type="number" id="totalBudget" value="10000000" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <input type="number" id="totalBudget" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-500 mb-1">Số người tham gia</label>
-                        <input type="number" id="totalPeople" value="4" min="1" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <input type="number" id="totalPeople" min="1" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
                     </div>
                 </div>
             </div>
@@ -36,7 +39,7 @@
                 <form id="expenseForm" class="space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-500 mb-1">Tên khoản chi</label>
-                        <input type="text" id="expName" placeholder="Ví dụ: Tiền phòng, Ăn uống..." required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <input type="text" id="expName" placeholder="Ví dụ: Tiền phòng, ăn uống..." required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-500 mb-1">Số tiền (VND)</label>
@@ -50,16 +53,6 @@
                         Thêm vào danh sách
                     </button>
                 </form>
-            </div>
-
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-3">
-                <button onclick="shareTrip()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2.5 rounded-lg transition shadow-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-share-nodes"></i> Sao chép link chia sẻ nhóm
-                </button>
-                <button onclick="clearAllData()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-lg transition flex items-center justify-center gap-2 text-sm">
-                    <i class="fa-solid fa-trash-arrow-up"></i> Xóa toàn bộ dữ liệu cũ
-                </button>
-                <p id="shareAlert" class="text-xs text-emerald-600 text-center font-medium hidden">Đã sao chép link thành công!</p>
             </div>
         </div>
 
@@ -80,7 +73,7 @@
             </div>
 
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4"><i class="fa-solid fa-list-check mr-2 text-indigo-500"></i>Lịch sử chi tiêu</h2>
+                <h2 class="text-lg font-semibold text-slate-800 mb-4"><i class="fa-solid fa-list-check mr-2 text-indigo-500"></i>Lịch sử chi tiêu cả nhóm</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -96,17 +89,41 @@
                 </div>
                 <div id="emptyState" class="text-center py-12 text-slate-400">
                     <i class="fa-solid fa-wallet text-4xl mb-2 text-slate-300"></i>
-                    <p>Chưa có khoản chi nào được nhập.</p>
+                    <p>Mọi người chưa nhập khoản chi nào.</p>
                 </div>
             </div>
         </div>
-
     </main>
 
     <script>
-        let expenses = [];
+        // CẤU HÌNH KẾT NỐI GOOGLE FIREBASE
+        // Hãy thay thế bằng đoạn cấu hình của riêng bạn lấy từ Firebase Console để lưu trữ riêng biệt
+        const firebaseConfig = {
+  apiKey: "AIzaSyCCRh3UZcbXEtjIlz5-YHprS7w3Ol50QPs",
+  authDomain: "quydulich.firebaseapp.com",
+  databaseURL: "https://quydulich-default-rtdb.firebaseio.com", // <-- Kiểm tra xem đã có dòng này chưa
+  projectId: "quydulich",
+  storageBucket: "quydulich.firebasestorage.app",
+  messagingSenderId: "74541974693",
+  appId: "1:74541974693:web:0c1847f224c43ef002394c",
+  measurementId: "G-EM0JVCFDKC"
+};
+        
+        // Khởi tạo Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        // DOM Elements
+        // Tự động gom nhóm dữ liệu theo từng đường link riêng biệt bằng ID chuyến đi trên URL
+        let urlParams = new URLSearchParams(window.location.search);
+        let tripId = urlParams.get('trip');
+        if (!tripId) {
+            tripId = 'chuyen_di_' + Math.random().toString(36).substr(2, 9);
+            window.history.replaceState({}, document.title, window.location.pathname + '?trip=' + tripId);
+        }
+
+        const tripRef = database.ref('trips/' + tripId);
+
+        // Các thành phần DOM
         const totalBudgetInput = document.getElementById('totalBudget');
         const totalPeopleInput = document.getElementById('totalPeople');
         const expenseForm = document.getElementById('expenseForm');
@@ -118,54 +135,21 @@
         const statSpent = document.getElementById('statSpent');
         const statRemaining = document.getElementById('statRemaining');
         const statPerPerson = document.getElementById('statPerPerson');
-        const shareAlert = document.getElementById('shareAlert');
 
         function formatMoney(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
-        // HÀM LƯU DỮ LIỆU VÀO TRÌNH DUYỆT (LOCALSTORAGE)
-        function saveToLocalStorage() {
-            const dataToSave = {
-                budget: totalBudgetInput.value,
-                people: totalPeopleInput.value,
-                expenses: expenses
-            };
-            localStorage.setItem('trip_data', JSON.stringify(dataToSave));
-        }
+        // TỰ ĐỘNG ĐỒNG BỘ DỮ LIỆU TỪ MẠNG VỀ (BẤT CỨ AI SỬA, MÁY KHÁC TỰ THAY ĐỔI THEO)
+        tripRef.on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            
+            totalBudgetInput.value = data.budget || 10000000;
+            totalPeopleInput.value = data.people || 4;
+            
+            const expenses = data.expenses ? Object.values(data.expenses) : [];
+            const expenseIds = data.expenses ? Object.keys(data.expenses) : [];
 
-        // HÀM ĐỌC DỮ LIỆU (TỪ LINK HOẶC TỪ BỘ NHỚ CŨ)
-        function loadData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const dataParam = urlParams.get('data');
-
-            if (dataParam) {
-                // Nếu có dữ liệu từ Link chia sẻ thì ưu tiên đọc từ link
-                try {
-                    const decodedData = JSON.parse(decodeURIComponent(atob(dataParam)));
-                    totalBudgetInput.value = decodedData.budget || 10000000;
-                    totalPeopleInput.value = decodedData.people || 4;
-                    expenses = decodedData.expenses || [];
-                    saveToLocalStorage(); // Lưu đè vào máy người nhận để họ giữ lại bản này
-                    // Xóa param trên URL để link trông gọn gàng hơn sau khi đã nhận xong
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                } catch (e) {
-                    console.error("Lỗi giải mã link dữ liệu", e);
-                }
-            } else {
-                // Nếu mở bình thường thì đọc từ LocalStorage cũ của máy
-                const savedData = localStorage.getItem('trip_data');
-                if (savedData) {
-                    const parsedData = JSON.parse(savedData);
-                    totalBudgetInput.value = parsedData.budget || 10000000;
-                    totalPeopleInput.value = parsedData.people || 4;
-                    expenses = parsedData.expenses || [];
-                }
-            }
-            updateUI();
-        }
-
-        function updateUI() {
             const budget = parseFloat(totalBudgetInput.value) || 0;
             const people = parseInt(totalPeopleInput.value) || 1;
             const totalSpent = expenses.reduce((sum, item) => sum + item.amount, 0);
@@ -176,11 +160,7 @@
             statRemaining.innerText = formatMoney(remaining);
             statPerPerson.innerText = formatMoney(perPerson);
 
-            if (remaining < 0) {
-                statRemaining.className = "text-xl font-bold text-red-600 mt-1";
-            } else {
-                statRemaining.className = "text-xl font-bold text-emerald-600 mt-1";
-            }
+            statRemaining.className = remaining < 0 ? "text-xl font-bold text-red-600 mt-1" : "text-xl font-bold text-emerald-600 mt-1";
 
             expenseList.innerHTML = '';
             if (expenses.length === 0) {
@@ -195,7 +175,7 @@
                         <td class="py-3 text-slate-500 text-sm">${item.payer || 'Không rõ'}</td>
                         <td class="py-3 text-right font-semibold text-slate-800">${formatMoney(item.amount)}</td>
                         <td class="py-3 text-center">
-                            <button onclick="deleteExpense(${index})" class="text-red-400 hover:text-red-600 transition">
+                            <button onclick="deleteExpense('${expenseIds[index]}')" class="text-red-400 hover:text-red-600 transition">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </td>
@@ -203,52 +183,25 @@
                     expenseList.appendChild(row);
                 });
             }
-        }
+        });
 
-        // HÀM TẠO LINK CHIA SẺ
-        function shareTrip() {
-            const dataToShare = {
-                budget: totalBudgetInput.value,
-                people: totalPeopleInput.value,
-                expenses: expenses
-            };
-            // Mã hóa dữ liệu thành chuỗi Base64 an toàn cho URL
-            const jsonStr = JSON.stringify(dataToShare);
-            const base64Str = btoa(encodeURIComponent(jsonStr));
-            
-            // Tạo link tuyệt đối dựa trên vị trí file hiện tại
-            const shareUrl = `${window.location.origin}${window.location.pathname}?data=${base64Str}`;
-            
-            // Copy link vào bộ nhớ tạm (Clipboard)
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                shareAlert.classList.remove('hidden');
-                setTimeout(() => shareAlert.classList.add('hidden'), 3000);
-            }).catch(err => {
-                alert("Không thể tự động sao chép. Hãy copy link này: " + shareUrl);
-            });
-        }
+        // TỰ ĐỘNG LƯU KHI ĐỔI CẤU HÌNH NGÂN SÁCH/SỐ NGƯỜI
+        totalBudgetInput.addEventListener('input', () => {
+            tripRef.child('budget').set(totalBudgetInput.value);
+        });
+        totalPeopleInput.addEventListener('input', () => {
+            tripRef.child('people').set(totalPeopleInput.value);
+        });
 
-        // HÀM XÓA TOÀN BỘ ĐỂ LÀM LẠI CHUYẾN ĐI MỚI
-        function clearAllData() {
-            if (confirm("Bạn có chắc chắn muốn xóa hết tất cả chi tiêu hiện tại không?")) {
-                localStorage.removeItem('trip_data');
-                expenses = [];
-                totalBudgetInput.value = 10000000;
-                totalPeopleInput.value = 4;
-                updateUI();
-            }
-        }
-
-        // Lắng nghe sự kiện điền form
+        // TỰ ĐỘNG ĐẨY KHOẢN CHI MỚI LÊN MẠNG KHI BẤM ADD
         expenseForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            expenses.push({
+            const newExpenseRef = tripRef.child('expenses').push();
+            newExpenseRef.set({
                 name: expNameInput.value,
                 amount: parseFloat(expAmountInput.value) || 0,
                 payer: expPayerInput.value
             });
-            saveToLocalStorage();
-            updateUI();
 
             expNameInput.value = '';
             expAmountInput.value = '';
@@ -256,17 +209,12 @@
             expNameInput.focus();
         });
 
-        function deleteExpense(index) {
-            expenses.splice(index, 1);
-            saveToLocalStorage();
-            updateUI();
+        // HÀM XÓA KHOẢN CHI TRÊN DATABASE TỪ XA
+        function deleteExpense(key) {
+            if(confirm("Xóa khoản chi này?")) {
+                tripRef.child('expenses').child(key).remove();
+            }
         }
-
-        totalBudgetInput.addEventListener('input', () => { saveToLocalStorage(); updateUI(); });
-        totalPeopleInput.addEventListener('input', () => { saveToLocalStorage(); updateUI(); });
-
-        // Khởi chạy khi tải trang
-        loadData();
     </script>
 </body>
 </html>
